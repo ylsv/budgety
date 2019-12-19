@@ -134,7 +134,7 @@ const BudgetController = (() => {
 
 
 // UI CONTROLLER
-const UIController = (() => {
+const UIController = (function() {
 
 	const DOMStrings = {
 		inputType: '.add__type',
@@ -149,10 +149,28 @@ const UIController = (() => {
 		percentageLabel: '.budget__expenses--percentage',
 		container: '.container',
 		expensesPercLabel: '.item__percentage',
+	};
+
+	const formatNumber = function(num, type) {
+		let numSplit, int, dec;
+
+		num = Math.abs(num);
+		num = num.toFixed(2);
+
+		numSplit = num.split('.');
+
+		int = numSplit[0];
+		if (int.length > 3) {
+			int = int.substr(0, int.length - 3) + ',' + int.substr(int.length - 3, int.length);
+		}
+
+		dec = numSplit[1];
+
+		return (type === 'exp' ? '-' : '+') + ' ' + int + '.' + dec;
 	}
 
 	return {
-		getInput: () => {
+		getInput: function() {
 			return {
 				type: document.querySelector(DOMStrings.inputType).value, // will be inc or exp
 				description: document.querySelector(DOMStrings.inputDesc).value,
@@ -160,7 +178,7 @@ const UIController = (() => {
 			};
 		},
 
-		addListItem: (obj, type) => {
+		addListItem: function(obj, type) {
 				// create html string with placeholder text
 				let html, newHtml, element;
 
@@ -200,7 +218,7 @@ const UIController = (() => {
 				// replace placeholder text with actual data
 				newHtml = html.replace('%id%', obj.id);
 				newHtml = newHtml.replace('%description%', obj.description);
-				newHtml = newHtml.replace('%value%', obj.value);
+				newHtml = newHtml.replace('%value%', formatNumber(obj.value, type));
 
 				// insert html into the dom
 				document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
@@ -222,9 +240,11 @@ const UIController = (() => {
 		},
 
 		displayBudget: function(obj) {
-			document.querySelector(DOMStrings.budgetLabel).textContent = obj.budget;
-			document.querySelector(DOMStrings.incomeLabel).textContent = obj.totalInc;
-			document.querySelector(DOMStrings.expensesLabel).textContent = obj.totalExp;
+			let type;
+			obj.budget > 0 ? type = 'inc' : type = 'exp';
+			document.querySelector(DOMStrings.budgetLabel).textContent = formatNumber(obj.budget, type);
+			document.querySelector(DOMStrings.incomeLabel).textContent = formatNumber(obj.totalInc, "inc");
+			document.querySelector(DOMStrings.expensesLabel).textContent = formatNumber(obj.totalExp, "exp");
 			
 			if(obj.percentage > 0) {
 				document.querySelector(DOMStrings.percentageLabel).textContent = `${obj.percentage}%`;
@@ -249,7 +269,6 @@ const UIController = (() => {
 					cur.textContent = '---';
 				}
 			});
-
 		},
 
 		getDOMStrings: () => {
